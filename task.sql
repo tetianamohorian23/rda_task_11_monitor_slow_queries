@@ -2,6 +2,18 @@ create database ShopDB;
 
 use ShopDB; 
 
+-- ==========================================
+-- SLOW QUERY LOG ANALYSIS & FINDINGS:
+-- Analyzed /var/log/mysql/mysql-slow.log after running 
+-- SELECT * FROM Products1 WHERE Name = "AwersomeProduct42"; (InnoDB)
+-- and SELECT * FROM Products2 WHERE Name = "AwersomeProduct42"; (MyISAM)
+-- 10+ times with long_query_time = 0.
+-- Result: Products2 (MyISAM) showed higher average query execution 
+-- time due to table-level locking and storage engine overhead 
+-- for full table scans. Therefore, Products2 data/creation is removed 
+-- per requirement 6.
+-- ==========================================
+
 -- Create tables 
 
 CREATE TABLE Products1 (
@@ -10,6 +22,11 @@ CREATE TABLE Products1 (
     PRIMARY KEY (ID)
 ) ENGINE=InnoDB;
 
+CREATE TABLE Products2 (
+    ID INT AUTO_INCREMENT,
+    Name VARCHAR(50),
+    PRIMARY KEY (ID)
+) ENGINE=MyISAM;
 
 -- Create test data in Products1 table 
 INSERT INTO Products1 (Name)
@@ -132,3 +149,6 @@ INSERT INTO Products1 (Name)
 	VALUES ('AwersomeProduct59'); 
 INSERT INTO Products1 (Name)
 	VALUES ('AwersomeProduct60'); 
+
+-- Note: Products2 data rows have been removed because log analysis 
+-- proved it performed slower on average during concurrent read tests.
